@@ -69,7 +69,7 @@ variants of 3 of them.  They are:
 | `bui2_merge_sort` | Bottom-Up MergeSort, version 2. | The same algorithm as `bui1_merge_sort`, but with a minor tweak that puts sorted pairs onto the work stack rather than single nodes. |
 | `tdr1_merge_sort` | Top-Down Recursive MergeSort, version 1. | This is the simplest top-down recursive merge sort.  It does not take advantage of list length information. |
 | `tdr2_merge_sort` | Top-Down Recursive MergeSort, version 2. | Similar to `tdr1_merge_sort`, except that it measures the list length up front, and uses that to optimize finding the midpoint. |
-| `tdr3_quick_sort` | Top-Down Recursive QuickSort. | This is the only QuickSort implementation in the mix.  I labeled it Top-Down Recursive, as QuickSort is top-down.  This is a naive QuickSort that just pulls its pivot from the first element.  My benchmark uses randomized data, so this actually is the best case for QuickSort in many ways. |
+| `tdq1_quick_sort` | Top-Down Recursive QuickSort, version 1. | This is the only QuickSort implementation in the mix.  This is a naive QuickSort that just pulls its pivot from the first element.  My benchmark uses randomized data, so this actually is the best case for QuickSort in many ways. |
 | `tdi1_merge_sort` | Top-Down Iterative MergeSort, version 1. | This is Drew Eckhardt's original code, with very minor tweaks to make it work in this framework. |
 | `tdi2_merge_sort` | Top-Down Iterative MergeSort, version 2. | I modified Drew's code to merge the first sub-list with the second sub-list while extracting the second sub-list from the main list.  This provides a nice locality-related boost when the sub-lists are long. |
 

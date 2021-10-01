@@ -25,7 +25,7 @@
 #include "tdi2_merge_sort.h"
 #include "tdr1_merge_sort.h"
 #include "tdr2_merge_sort.h"
-#include "tdr3_quick_sort.h"
+#include "tdq1_quick_sort.h"
 
 
 // Returns the current time in seconds.
@@ -167,20 +167,20 @@ int main() {
     printf(",%f", tdr1_tr.time); fflush(stdout);
     const TestResult tdr2_tr = run_cacheline_list_test(buf, elems, tdr2_merge_sort, 0);
     printf(",%f", tdr2_tr.time); fflush(stdout);
-    const TestResult tdr3_tr = run_cacheline_list_test(buf, elems, tdr3_quick_sort, 0);
-    printf(",%f", tdr3_tr.time); fflush(stdout);
+    const TestResult tdq1_tr = run_cacheline_list_test(buf, elems, tdq1_quick_sort, 0);
+    printf(",%f", tdq1_tr.time); fflush(stdout);
     const TestResult tdi1_tr = run_cacheline_list_test(buf, elems, tdi1_merge_sort, 0);
     printf(",%f", tdi1_tr.time); fflush(stdout);
     const TestResult tdi2_tr = run_cacheline_list_test(buf, elems, tdi2_merge_sort, 0);
     printf(",%f", tdi2_tr.time); fflush(stdout);
 
     if (bui1_tr.csum != bui2_tr.csum || bui1_tr.csum != tdr1_tr.csum ||
-        bui1_tr.csum != tdr2_tr.csum || bui1_tr.csum != tdr3_tr.csum ||
+        bui1_tr.csum != tdr2_tr.csum || bui1_tr.csum != tdq1_tr.csum ||
         bui1_tr.csum != tdi1_tr.csum || bui1_tr.csum != tdi2_tr.csum) {
       printf(",Warmup Failed: " "%" PRIX64 " %" PRIX64
              " %" PRIX64 " %" PRIX64 " %" PRIX64 " %" PRIX64 " %" PRIX64 "\n",
              bui1_tr.csum, bui2_tr.csum, tdr1_tr.csum, tdr2_tr.csum,
-             tdr3_tr.csum, tdi1_tr.csum, tdi2_tr.csum);
+             tdq1_tr.csum, tdi1_tr.csum, tdi2_tr.csum);
       exit(1);
     } else {
       printf(",Warmup passed.\n");
@@ -210,7 +210,7 @@ int main() {
       printf("%zu", elems); fflush(stdout);
 
       double tot_bui1_time = 0., tot_bui2_time = 0.,
-             tot_tdr1_time = 0., tot_tdr2_time = 0., tot_tdr3_time = 0.,
+             tot_tdr1_time = 0., tot_tdr2_time = 0., tot_tdq1_time = 0.,
              tot_tdi1_time = 0., tot_tdi2_time = 0.;
 
       for (int seed = 1; seed <= NUM_SEEDS; ++seed) {
@@ -222,8 +222,8 @@ int main() {
           run_cacheline_list_test(buf, elems, tdr1_merge_sort, seed);
         const TestResult tdr2_tr =
           run_cacheline_list_test(buf, elems, tdr2_merge_sort, seed);
-        const TestResult tdr3_tr =
-          run_cacheline_list_test(buf, elems, tdr3_quick_sort, seed);
+        const TestResult tdq1_tr =
+          run_cacheline_list_test(buf, elems, tdq1_quick_sort, seed);
         const TestResult tdi1_tr =
           run_cacheline_list_test(buf, elems, tdi1_merge_sort, seed);
         const TestResult tdi2_tr =
@@ -233,17 +233,17 @@ int main() {
         tot_bui2_time += bui2_tr.time;
         tot_tdr1_time += tdr1_tr.time;
         tot_tdr2_time += tdr2_tr.time;
-        tot_tdr3_time += tdr3_tr.time;
+        tot_tdq1_time += tdq1_tr.time;
         tot_tdi1_time += tdi1_tr.time;
         tot_tdi2_time += tdi2_tr.time;
 
         if (bui1_tr.csum != bui2_tr.csum || bui1_tr.csum != tdr1_tr.csum ||
-            bui1_tr.csum != tdr2_tr.csum || bui1_tr.csum != tdr3_tr.csum ||
+            bui1_tr.csum != tdr2_tr.csum || bui1_tr.csum != tdq1_tr.csum ||
             bui1_tr.csum != tdi1_tr.csum || bui1_tr.csum != tdi2_tr.csum) {
           printf(",Sort Failed: %" PRIX64 " %" PRIX64 " %" PRIX64 " %" PRIX64
                  " %" PRIX64 " %" PRIX64  " %" PRIX64 " seed=%d\n",
                  bui1_tr.csum, bui2_tr.csum, tdr1_tr.csum, tdr2_tr.csum,
-                 tdr3_tr.csum, tdi1_tr.csum, tdi2_tr.csum, seed);
+                 tdq1_tr.csum, tdi1_tr.csum, tdi2_tr.csum, seed);
           exit(1);
         }
       }
@@ -252,13 +252,13 @@ int main() {
       tot_bui2_time /= NUM_SEEDS;
       tot_tdr1_time /= NUM_SEEDS;
       tot_tdr2_time /= NUM_SEEDS;
-      tot_tdr3_time /= NUM_SEEDS;
+      tot_tdq1_time /= NUM_SEEDS;
       tot_tdi1_time /= NUM_SEEDS;
       tot_tdi2_time /= NUM_SEEDS;
 
       printf(",%g,%g,%g,%g,%g,%g,%g\n",
              tot_bui1_time, tot_bui2_time,
-             tot_tdr1_time, tot_tdr2_time, tot_tdr3_time,
+             tot_tdr1_time, tot_tdr2_time, tot_tdq1_time,
              tot_tdi1_time, tot_tdi2_time);
     }
   }

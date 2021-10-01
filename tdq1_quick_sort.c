@@ -2,7 +2,7 @@
 //
 // Author:  Joe Zbiciak <joe.zbiciak@leftturnonly.info>
 // SPDX-License-Identifier:  CC-BY-SA-4.0
-#include "tdr3_quick_sort.h"
+#include "tdq1_quick_sort.h"
 
 // Quicksort with naive pivot selection.
 #include <stddef.h>
@@ -117,6 +117,6 @@ static QuickSortRet quick_sort_recurse(
 }
 
 // Sorts a singly linked list with a naive pivot Quicksort.
-ListNode *tdr3_quick_sort(ListNode *const head, ListNodeCompareFxn *const cmp) {
+ListNode *tdq1_quick_sort(ListNode *const head, ListNodeCompareFxn *const cmp) {
   return quick_sort_recurse(head, cmp).head;
 }
