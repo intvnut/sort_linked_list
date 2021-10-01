@@ -21,14 +21,14 @@ source.
 ## Background
 
 This is a simple linked list sorting benchmark inspired by
-[a question on Quora.](https://www.quora.com/Which-is-the-best-the-most-efficient-sorting-algorithm-implemented-by-linked-list-Merge-sort-Insertion-sort-heap-sort-or-Quick-sort).
-In [David Vandevoorde's answer,](https://www.quora.com/Which-is-the-best-the-most-efficient-sorting-algorithm-implemented-by-linked-list-Merge-sort-Insertion-sort-heap-sort-or-Quick-sort/answer/David-Vandevoorde),
+[a question on Quora.](https://www.quora.com/Which-is-the-best-the-most-efficient-sorting-algorithm-implemented-by-linked-list-Merge-sort-Insertion-sort-heap-sort-or-Quick-sort)
+In [David Vandevoorde's answer,](https://www.quora.com/Which-is-the-best-the-most-efficient-sorting-algorithm-implemented-by-linked-list-Merge-sort-Insertion-sort-heap-sort-or-Quick-sort/answer/David-Vandevoorde)
 I posted a merge sort technique I came up with on the spot that merges
 sub-lists in a power-of-2 fashion bottom-up.  Meanwhile, Jerry Coffin mentioned
 a traditional top-down recursive approach, and Drew Eckhardt posted code for a
 top-down iterative version with O(1) storage along with a link to
 [his answer to a similar question](https://www.quora.com/What-is-the-best-way-to-sort-an-unsorted-linked-list/answers/3873494).
-David's original answer mentiones a number of very interesting approaches,
+David's original answer mentions a number of very interesting approaches,
 including using QuickSort and InsertionSort, or making hybrids involving
 QuickSort or MergeSort, combined with InsertionSort for the leaves.
 
