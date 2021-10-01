@@ -40,4 +40,4 @@ extern bool compare_cacheline_list_node(ListNode*, ListNode*);
 // Function type for list sort functions.  Returns the new head of a list.
 typedef ListNode *ListSortFxn(ListNode*, ListNodeCompareFxn*);
 
-#endif  // NODE_H_
+#endif  // LIST_NODE_H_
