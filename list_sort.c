@@ -16,8 +16,8 @@
 const SortRegistry sort_registry = {
   .length = 7,
   .entry = {
-    { "Bottom-Up Rec. MergeSort 1", bui1_merge_sort },
-    { "Bottom-Up Rec. MergeSort 2", bui2_merge_sort },
+    { "Bottom-Up Iter. MergeSort 1", bui1_merge_sort },
+    { "Bottom-Up Iter. MergeSort 2", bui2_merge_sort },
     { "Top-Down Rec. MergeSort 1",  tdr1_merge_sort },
     { "Top-Down Rec. MergeSort 2",  tdr2_merge_sort },
     { "Top-Down Rec. QuickSort 1",  tdq1_quick_sort },
