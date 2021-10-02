@@ -9,7 +9,8 @@
 
 // Implements a naive top-down recursive merge sort on a linked list.
 // This version does not try to measure the list length up front to take
-// advantage of it.
+// advantage of it.  It scans the list looking for the midpoint, using
+// two pointers, once of which advances half as fast as the other.
 ListNode *tdr1_merge_sort(ListNode *head, ListNodeCompareFxn *cmp);
 
 #endif  // TDR1_MERGE_SORT_H_
