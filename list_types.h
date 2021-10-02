@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "list_bench.h"
 #include "list_node.h"
 #include "list_sort.h"
 
@@ -30,5 +31,9 @@ typedef struct cacheline_list_node {
 // Comparison functions for Int64Node and CachelineNode.
 extern bool compare_int64_list_node(const ListNode*, const ListNode*);
 extern bool compare_cacheline_list_node(const ListNode*, const ListNode*);
+
+// Benchmarking interfaces.
+extern const ListNodeOps list_node_ops_int64;
+// extern const ListNodeOps list_node_ops_cacheline; // TODO
 
 #endif  // LIST_TYPES_H_

@@ -15,65 +15,6 @@
 #include "list_types.h"
 #include "mt64.h"
 
-// Treats a buffer as an array of a particular list node type, returning a
-// ListNode* to a given index.
-typedef ListNode *ListNodeGetFxn(void *buf, size_t index);
-
-// Randomizes the value a list node of a particular type, given a ListNode*.
-typedef void ListNodeRandomizeFxn(ListNode *node);
-
-// Returns an index-sensitive checksum for a list node of a particular type.
-typedef uint64_t ListNodeChecksumFxn(const ListNode *node, size_t index);
-
-// Returns false if a list node of a particular type violates an internal
-// constraint, given a ListNode*.
-typedef bool ListNodeValidateFxn(const ListNode *node);
-
-// Provides a set of function pointers for working with list nodes of different
-// types in a generic manner.
-typedef struct {
-  ListNodeGetFxn *get;
-  ListNodeRandomizeFxn *randomize;
-  ListNodeCompareFxn *compare;
-  ListNodeChecksumFxn *checksum;
-  ListNodeValidateFxn *validate;
-} ListNodeOps;
-
-// Returns an Int64ListNode at the specified index.
-static ListNode *get_int64_list_node(void *const buf, const size_t index) {
-  return (ListNode *)((Int64ListNode *)buf + index);
-}
-
-// Randomizes an Int64ListNode, given a ListNode* to the node.
-static void randomize_int64_list_node(ListNode *const node) {
-  Int64ListNode *const int64_node = (Int64ListNode *)node;
-  int64_node->value = genrand64_int64();
-}
-
-// Returns an index-sensitive checksum for an Int64ListNode.
-static uint64_t checksum_int64_list_node(
-    const ListNode *const node,
-    const size_t index
-) {
-  return ((uint64_t)((Int64ListNode *)node)->value) * (index + 1);
-}
-
-// Validates an Int64ListNode.
-static bool validate_int64_list_node(const ListNode *const node) {
-  // Int64ListNodes don't have anything to validate.
-  (void)node;
-  return true;
-}
-
-// List node operations for an Int64List.
-static const ListNodeOps list_node_ops_int64 = {
-  .get = get_int64_list_node,
-  .randomize = randomize_int64_list_node,
-  .compare = compare_int64_list_node,
-  .checksum = checksum_int64_list_node,
-  .validate = validate_int64_list_node
-};
-
 // Returns the current time in seconds.
 static double now(void) {
   struct timespec ts;
