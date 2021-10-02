@@ -73,3 +73,50 @@ const ListNodeOps list_node_ops_int64 = {
   .validate = validate_int64_list_node
 };
 
+
+// Returns a CachelineListNode at the specified index.
+static ListNode *get_cacheline_list_node(void *const buf, const size_t index) {
+  return (ListNode *)((CachelineListNode *)buf + index);
+}
+
+// Randomizes a CachelineListNode, given a ListNode* to the node.
+static void randomize_cacheline_list_node(ListNode *const node) {
+  const int last = kCachelineListNodeDataLen - 1;
+  CachelineListNode *const cacheline_node = (CachelineListNode *)node;
+
+  for (size_t i = 0; i < last; ++i) {
+    cacheline_node->data[i] = 0;
+  }
+  cacheline_node->data[last] = genrand64_int64() % INT32_MAX;
+}
+
+// Returns an index-sensitive checksum for a CachelineListNode.
+static uint64_t checksum_cacheline_list_node(
+    const ListNode *const node,
+    const size_t index
+) {
+  const int last = kCachelineListNodeDataLen - 1;
+  return ((uint64_t)((CachelineListNode *)node)->data[last]) * (index + 1);
+}
+
+// Validates a CachelineListNode.
+static bool validate_cacheline_list_node(const ListNode *const node) {
+  const CachelineListNode *const cacheline_node = (CachelineListNode *)node;
+  const int last = kCachelineListNodeDataLen - 1;
+  // Just verify the data entries before 'last' are all 0.
+  for (int i = 0; i < last; ++i) {
+    if (cacheline_node->data[i] != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// List node operations for an Int64List.
+const ListNodeOps list_node_ops_cacheline = {
+  .get = get_cacheline_list_node,
+  .randomize = randomize_cacheline_list_node,
+  .compare = compare_cacheline_list_node,
+  .checksum = checksum_cacheline_list_node,
+  .validate = validate_cacheline_list_node
+};

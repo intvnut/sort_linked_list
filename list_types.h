@@ -34,6 +34,6 @@ extern bool compare_cacheline_list_node(const ListNode*, const ListNode*);
 
 // Benchmarking interfaces.
 extern const ListNodeOps list_node_ops_int64;
-// extern const ListNodeOps list_node_ops_cacheline; // TODO
+extern const ListNodeOps list_node_ops_cacheline;
 
 #endif  // LIST_TYPES_H_
