@@ -10,7 +10,7 @@
 
 // Function type for node comparison functions.  Returns true if the first
 // argument is less than the second argument.
-typedef bool ListNodeCompareFxn(ListNode*, ListNode*);
+typedef bool ListNodeCompareFxn(const ListNode*, const ListNode*);
 
 // Function type for list sort functions.  Returns the new head of a list.
 typedef ListNode *ListSortFxn(ListNode*, ListNodeCompareFxn*);

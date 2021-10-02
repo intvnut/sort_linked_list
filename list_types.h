@@ -28,7 +28,7 @@ typedef struct cacheline_list_node {
 } CachelineListNode;
 
 // Comparison functions for Int64Node and CachelineNode.
-extern bool compare_int64_list_node(ListNode*, ListNode*);
-extern bool compare_cacheline_list_node(ListNode*, ListNode*);
+extern bool compare_int64_list_node(const ListNode*, const ListNode*);
+extern bool compare_cacheline_list_node(const ListNode*, const ListNode*);
 
 #endif  // LIST_TYPES_H_

@@ -8,16 +8,17 @@
 #include "list_sort.h"
 #include "list_types.h"
 
-bool compare_int64_list_node(ListNode *a, ListNode *b) {
-  Int64ListNode *aa = (Int64ListNode *)a;
-  Int64ListNode *bb = (Int64ListNode *)b;
+bool compare_int64_list_node(const ListNode *const a, const ListNode *const b) {
+  const Int64ListNode *const aa = (const Int64ListNode *)a;
+  const Int64ListNode *const bb = (const Int64ListNode *)b;
 
   return aa->value < bb->value;
 }
 
-bool compare_cacheline_list_node(ListNode *a, ListNode *b) {
-  CachelineListNode *aa = (CachelineListNode *)a;
-  CachelineListNode *bb = (CachelineListNode *)b;
+bool compare_cacheline_list_node(
+    const ListNode *const a, const ListNode *const b) {
+  const CachelineListNode *const aa = (const CachelineListNode *)a;
+  const CachelineListNode *const bb = (const CachelineListNode *)b;
 
   for (size_t i = 0; i < kCachelineListNodeDataLen; ++i) {
     if (aa->data[i] < bb->data[i]) {
