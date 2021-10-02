@@ -125,9 +125,10 @@ typedef struct {
   uint64_t csum;
 } TestResult;
 
-// Invokes the sort function under test, returning its total execution time
-// and the checksum associated with its (hopefully) sorted list.
-static TestResult run_test(
+// Invokes the sort function under test on an already-prepared list, returning
+// its total execution time and the checksum associated with its (hopefully)
+// sorted list.
+static TestResult run_single_benchmark(
     ListSortFxn *const sort,
     const ListNodeBenchOps *const lnb_ops,
     void *const list_buf,
@@ -148,7 +149,9 @@ static TestResult run_test(
   return test_result;
 }
 
-static void run_tests(
+// Invokes each of the sort functions in the sort registry with the same size
+// input, iterating over a range of seed values for randomization.
+static void run_benchmark_suite_at_single_size(
     TestResult *const tr_buf,
     double *const time_buf,
     const ListNodeBenchOps *const lnb_ops,
@@ -165,8 +168,8 @@ static void run_tests(
 
   for (int seed = seed_lo; seed <= seed_hi; ++seed) {
     for (size_t i = 0; i < sort_registry.length; ++i) {
-      tr_buf[i] = run_test(sort_registry.entry[i].fxn,
-                           lnb_ops, list_buf, elems, seed);
+      tr_buf[i] = run_single_benchmark(sort_registry.entry[i].fxn,
+                                       lnb_ops, list_buf, elems, seed);
       time_buf[i] += tr_buf[i].time;
     }
 
@@ -196,6 +199,45 @@ static void run_tests(
   fflush(stdout);
 }
 
+// Sweeps over a range of input sizes, running the benchmark suite over a
+// range of input sizes.
+static void run_benchmark_suite_size_sweep(
+    TestResult *const tr_buf,
+    double *const time_buf,
+    const ListNodeBenchOps *const lnb_ops,
+    void *const list_buf,
+    const int seed_lo,
+    const int seed_hi,
+    const size_t size_lo,
+    const size_t size_hi
+) {
+  // Step the coarse-grain size by powers of 2.
+  for (int pow2 = 4; pow2 < 64; ++pow2) {
+    size_t prev_elems = 0;
+
+    // At each power-of-2, take 8 fine-grain steps.
+    for (int sub_pow2 = 0; sub_pow2 < 8; ++sub_pow2) {
+      const size_t bytes = (1ull << pow2) + sub_pow2 * (1ull << (pow2 - 3));
+      const size_t elems = bytes / lnb_ops->size;
+
+      // If the new size repeats an earlier element count, skip it.  Also, skip
+      // it if it's below our size range.
+      if (!elems || elems == prev_elems || bytes < size_lo) {
+        continue;
+      }
+
+      // Stop when we exceed our maximum size.
+      if (bytes > size_hi) {
+        break;
+      }
+      prev_elems = elems;
+
+      run_benchmark_suite_at_single_size(tr_buf, time_buf, lnb_ops, list_buf,
+                                         elems, seed_lo, seed_hi);
+    }
+  }
+}
+
 // Currently, 256MiB.
 #define MAX_POW2  (28)
 #define MAX_BYTES (1ull << MAX_POW2)
@@ -212,30 +254,17 @@ int main() {
     exit(1);
   }
 
-  // Warmup.
-  const size_t elems = MAX_BYTES / sizeof(Int64ListNode);
+  // Warmup.  Run the sorts on a max-size buffer with a single seed.
   print_csv_header("Warmup");
-  run_tests(tr_buf, time_buf, lnb_ops, list_buf, elems, 0, 0);
+  run_benchmark_suite_size_sweep(tr_buf, time_buf, lnb_ops, list_buf,
+                                 0, 0, MAX_BYTES, MAX_BYTES);
 
+
+  // Main benchmark.  
+  // Sweep over a range of memory sizes, and use multiple seeds.
   print_csv_header("Elems");
-  // Now run all three on different sizes up to MAX_BYTES, using eight sizes
-  // between each power of 2, and NUM_SEEDS different seeds for each size.
-  for (int pow2 = 4; pow2 <= MAX_POW2; pow2++) {
-    size_t prev_elems = 0;
-    for (int sub_pow2 = 0; sub_pow2 < 8; sub_pow2++) {
-      const size_t bytes = (1ull << pow2) + sub_pow2 * (1ull << (pow2 - 3));
-      const size_t elems = bytes / lnb_ops->size;
-      if (!elems || elems == prev_elems) {
-        continue;
-      }
-      if (bytes > MAX_BYTES) {
-        break;
-      }
-      prev_elems = elems;
-
-      run_tests(tr_buf, time_buf, lnb_ops, list_buf, elems, 1, NUM_SEEDS);
-    }
-  }
+  run_benchmark_suite_size_sweep(tr_buf, time_buf, lnb_ops, list_buf,
+                                 1, NUM_SEEDS, 16, MAX_BYTES);
   
   printf("PASS\n");
 }
