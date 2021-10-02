@@ -6,6 +6,7 @@ CC = gcc-9.2.0
 CFLAGS = -O3 -flto -Wall -W -Wextra -DUSE_MEMALIGN
 LFLAGS = -lrt
 
+COMMON_SRCS += list_sort.c
 COMMON_SRCS += list_types.c
 COMMON_SRCS += mt19937-64.c
 COMMON_SRCS += bui1_merge_sort.c
