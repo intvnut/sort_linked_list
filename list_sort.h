@@ -17,15 +17,18 @@ typedef bool ListNodeCompareFxn(const ListNode*, const ListNode*);
 // Function type for list sort functions.  Returns the new head of a list.
 typedef ListNode *ListSortFxn(ListNode*, ListNodeCompareFxn*);
 
+// Defines a registry entry for the sorting algorithm registry.
+typedef struct {
+    const char *name;
+    ListSortFxn *fxn;
+} SortRegistryEntry;
+
 // Defines a registry of sorting algorithms for the benchmarks to refer to, so
 // that we don't have to edit the benchmark drivers every time we add an
 // algorithm.
 typedef struct sort_registry {
   size_t length;
-  struct {
-    const char *name;
-    ListSortFxn *fxn;
-  } entry[];
+  const SortRegistryEntry *entry;
 } SortRegistry;
 
 extern const SortRegistry sort_registry;

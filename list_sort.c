@@ -13,17 +13,20 @@
 #include "tdr3_merge_sort.h"
 #include "tdq1_quick_sort.h"
 
+// Actual table of sort functions.  The registry points to this.
+static const SortRegistryEntry sort_registry_entry[] = {
+  { "Bottom-Up Iter. MergeSort 1", bui1_merge_sort },
+  { "Bottom-Up Iter. MergeSort 2", bui2_merge_sort },
+  { "Top-Down Rec. MergeSort 1",  tdr1_merge_sort },
+  { "Top-Down Rec. MergeSort 2",  tdr2_merge_sort },
+  { "Top-Down Rec. MergeSort 3",  tdr3_merge_sort },
+  { "Top-Down Rec. QuickSort 1",  tdq1_quick_sort },
+  { "Top-Down Iter. MergeSort 1", tdi1_merge_sort },
+  { "Top-Down Iter. MergeSort 2", tdi2_merge_sort },
+};
+
 // Registry of sort functions.
 const SortRegistry sort_registry = {
-  .length = 8,
-  .entry = {
-    { "Bottom-Up Iter. MergeSort 1", bui1_merge_sort },
-    { "Bottom-Up Iter. MergeSort 2", bui2_merge_sort },
-    { "Top-Down Rec. MergeSort 1",  tdr1_merge_sort },
-    { "Top-Down Rec. MergeSort 2",  tdr2_merge_sort },
-    { "Top-Down Rec. MergeSort 3",  tdr3_merge_sort },
-    { "Top-Down Rec. QuickSort 1",  tdq1_quick_sort },
-    { "Top-Down Iter. MergeSort 1", tdi1_merge_sort },
-    { "Top-Down Iter. MergeSort 2", tdi2_merge_sort },
-  }
+  .length = sizeof(sort_registry_entry) / sizeof(sort_registry_entry[0]),
+  .entry = sort_registry_entry
 };
