@@ -37,7 +37,7 @@ static void print_csv_header(const char *context) {
 // Creates a randomized linked list of int64_t in the designated buffer, with
 // the specified seed.
 static ListNode *generate_list(
-    const ListNodeOps *const ln_ops,
+    const ListNodeBenchOps *const lnb_ops,
     void *const list_buf,
     const size_t elems,
     const uint64_t seed
@@ -54,7 +54,7 @@ static ListNode *generate_list(
 
   // Randomize the values.
   for (size_t i = 0; i < elems; ++i) {
-    ln_ops->randomize(ln_ops->get(list_buf, i));
+    lnb_ops->randomize(lnb_ops->get(list_buf, i));
   }
 
   // Prepare to make a random permutation of nodes.
@@ -71,10 +71,10 @@ static ListNode *generate_list(
   }
 
   // String together the linked list.
-  ListNode *const first = ln_ops->get(list_buf, perm_buf[0]);
+  ListNode *const first = lnb_ops->get(list_buf, perm_buf[0]);
   ListNode *prev = first;
   for (size_t i = 1; i < elems; ++i) {
-    ListNode *const curr = ln_ops->get(list_buf, perm_buf[i]);
+    ListNode *const curr = lnb_ops->get(list_buf, perm_buf[i]);
     prev->next = curr;
     prev = curr;
   }
@@ -86,7 +86,7 @@ static ListNode *generate_list(
 // Returns 0 if incorrect; otherwise, returns a checksum of the list contents
 // computed with a simple weighted checksum.
 static uint64_t check_list_correctness(
-    const ListNodeOps *const ln_ops,
+    const ListNodeBenchOps *const lnb_ops,
     ListNode *const head,
     const size_t elems
 ) {
@@ -100,17 +100,17 @@ static uint64_t check_list_correctness(
     }
 
     // Fail if current node is less than the previous node.
-    if (prev && ln_ops->compare(curr, prev)) {
+    if (prev && lnb_ops->compare(curr, prev)) {
       return 0;
     }
 
     // Fail if node fails to validate.
-    if (!ln_ops->validate(curr)) {
+    if (!lnb_ops->validate(curr)) {
       return 0;
     }
 
     // Update checksum.
-    csum = ((csum << 1) ^ (csum >> 1)) + ln_ops->checksum(curr, i);
+    csum = ((csum << 1) ^ (csum >> 1)) + lnb_ops->checksum(curr, i);
 
     // Advance down the list.
     prev = curr;
@@ -129,20 +129,20 @@ typedef struct {
 // and the checksum associated with its (hopefully) sorted list.
 static TestResult run_test(
     ListSortFxn *const sort,
-    const ListNodeOps *const ln_ops,
+    const ListNodeBenchOps *const lnb_ops,
     void *const list_buf,
     const size_t elems,
     const int seed
 ) {
-  ListNode *const in = generate_list(ln_ops, list_buf, elems, seed);
+  ListNode *const in = generate_list(lnb_ops, list_buf, elems, seed);
 
   const double t1 = now();
-  ListNode *const out = sort(in, ln_ops->compare);
+  ListNode *const out = sort(in, lnb_ops->compare);
   const double t2 = now();
 
   const TestResult test_result = {
       .time = t2 - t1,
-      .csum = check_list_correctness(ln_ops, out, elems)
+      .csum = check_list_correctness(lnb_ops, out, elems)
   };
 
   return test_result;
@@ -151,7 +151,7 @@ static TestResult run_test(
 static void run_tests(
     TestResult *const tr_buf,
     double *const time_buf,
-    const ListNodeOps *const ln_ops,
+    const ListNodeBenchOps *const lnb_ops,
     void *const list_buf,
     const size_t elems,
     const int seed_lo,
@@ -166,7 +166,7 @@ static void run_tests(
   for (int seed = seed_lo; seed <= seed_hi; ++seed) {
     for (size_t i = 0; i < sort_registry.length; ++i) {
       tr_buf[i] = run_test(sort_registry.entry[i].fxn,
-                           ln_ops, list_buf, elems, seed);
+                           lnb_ops, list_buf, elems, seed);
       time_buf[i] += tr_buf[i].time;
     }
 
@@ -202,6 +202,7 @@ static void run_tests(
 #define NUM_SEEDS (8)
 
 int main() {
+  const ListNodeBenchOps *const lnb_ops = &list_node_bench_ops_int64;
   void *const list_buf = malloc(MAX_BYTES);
   TestResult *const tr_buf = calloc(sizeof(TestResult), sort_registry.length);
   double *const time_buf = calloc(sizeof(double), sort_registry.length);
@@ -214,27 +215,25 @@ int main() {
   // Warmup.
   const size_t elems = MAX_BYTES / sizeof(Int64ListNode);
   print_csv_header("Warmup");
-  run_tests(tr_buf, time_buf, &list_node_ops_int64, list_buf, elems, 0, 0);
+  run_tests(tr_buf, time_buf, lnb_ops, list_buf, elems, 0, 0);
 
   print_csv_header("Elems");
-
   // Now run all three on different sizes up to MAX_BYTES, using eight sizes
   // between each power of 2, and NUM_SEEDS different seeds for each size.
   for (int pow2 = 4; pow2 <= MAX_POW2; pow2++) {
     size_t prev_elems = 0;
     for (int sub_pow2 = 0; sub_pow2 < 8; sub_pow2++) {
-      const size_t size = (1ull << pow2) + sub_pow2 * (1ull << (pow2 - 3));
-      const size_t elems = size / sizeof(Int64ListNode);
+      const size_t bytes = (1ull << pow2) + sub_pow2 * (1ull << (pow2 - 3));
+      const size_t elems = bytes / lnb_ops->size;
       if (!elems || elems == prev_elems) {
         continue;
       }
-      if (size > MAX_BYTES) {
+      if (bytes > MAX_BYTES) {
         break;
       }
       prev_elems = elems;
 
-      run_tests(tr_buf, time_buf, &list_node_ops_int64, list_buf, elems, 1,
-                NUM_SEEDS);
+      run_tests(tr_buf, time_buf, lnb_ops, list_buf, elems, 1, NUM_SEEDS);
     }
   }
   

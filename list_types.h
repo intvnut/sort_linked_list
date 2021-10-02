@@ -33,7 +33,7 @@ extern bool compare_int64_list_node(const ListNode*, const ListNode*);
 extern bool compare_cacheline_list_node(const ListNode*, const ListNode*);
 
 // Benchmarking interfaces.
-extern const ListNodeOps list_node_ops_int64;
-extern const ListNodeOps list_node_ops_cacheline;
+extern const ListNodeBenchOps list_node_bench_ops_int64;
+extern const ListNodeBenchOps list_node_bench_ops_cacheline;
 
 #endif  // LIST_TYPES_H_

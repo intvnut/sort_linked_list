@@ -65,7 +65,8 @@ static bool validate_int64_list_node(const ListNode *const node) {
 }
 
 // List node operations for an Int64List.
-const ListNodeOps list_node_ops_int64 = {
+const ListNodeBenchOps list_node_bench_ops_int64 = {
+  .size = sizeof(Int64ListNode),
   .get = get_int64_list_node,
   .randomize = randomize_int64_list_node,
   .compare = compare_int64_list_node,
@@ -113,7 +114,8 @@ static bool validate_cacheline_list_node(const ListNode *const node) {
 }
 
 // List node operations for an Int64List.
-const ListNodeOps list_node_ops_cacheline = {
+const ListNodeBenchOps list_node_bench_ops_cacheline = {
+  .size = sizeof(CachelineListNode),
   .get = get_cacheline_list_node,
   .randomize = randomize_cacheline_list_node,
   .compare = compare_cacheline_list_node,
