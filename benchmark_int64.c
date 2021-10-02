@@ -132,8 +132,7 @@ int main() {
 
   // Warmup.
   {
-    //const size_t elems = MAX_BYTES / sizeof(Int64ListNode);
-    const size_t elems = 1000;
+    const size_t elems = MAX_BYTES / sizeof(Int64ListNode);
     printf("Warmup,Bottom-Up Iterative 1,Bottom-Up Iterative 2,"
            "Top-Down Recursive 1,Top-Down Recursive 2,Top-Down Recursive 3,"
            "Top-Down Iterative 1,Top-Down Iterative 2\n"
