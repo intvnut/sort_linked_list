@@ -15,7 +15,7 @@
 
 // Registry of sort functions.
 const SortRegistry sort_registry = {
-  .length = 7,
+  .length = 8,
   .entry = {
     { "Bottom-Up Iter. MergeSort 1", bui1_merge_sort },
     { "Bottom-Up Iter. MergeSort 2", bui2_merge_sort },
