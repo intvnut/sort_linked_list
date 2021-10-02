@@ -15,6 +15,7 @@ COMMON_SRCS += tdi1_merge_sort.c
 COMMON_SRCS += tdi2_merge_sort.c
 COMMON_SRCS += tdr1_merge_sort.c
 COMMON_SRCS += tdr2_merge_sort.c
+COMMON_SRCS += tdr3_merge_sort.c
 COMMON_SRCS += tdq1_quick_sort.c
 
 BMK_INT64_SRCS += benchmark_int64.c
@@ -30,6 +31,7 @@ COMMON_HDRS += tdi1_merge_sort.h
 COMMON_HDRS += tdi2_merge_sort.h
 COMMON_HDRS += tdr1_merge_sort.h
 COMMON_HDRS += tdr2_merge_sort.h
+COMMON_HDRS += tdr3_merge_sort.h
 COMMON_HDRS += tdq1_quick_sort.h
 
 all: benchmark_cacheline benchmark_int64
