@@ -18,7 +18,7 @@ COMMON_SRCS += tdr2_merge_sort.c
 COMMON_SRCS += tdr3_merge_sort.c
 COMMON_SRCS += tdq1_quick_sort.c
 
-BMK_INT64_SRCS += benchmark_int64.c
+BMK_INT64_SRCS += benchmark.c
 BMK_CACHELINE_SRCS += benchmark_cacheline.c
 
 COMMON_HDRS += list_node.h

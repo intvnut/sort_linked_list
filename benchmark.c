@@ -1,8 +1,9 @@
-// Benchmarks linked lists of int64_t.
+// Benchmarks linked lists of various types.
 //
 // Author:  Joe Zbiciak <joe.zbiciak@leftturnonly.info>
 // SPDX-License-Identifier:  CC-BY-SA-4.0
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,6 +14,65 @@
 #include "list_sort.h"
 #include "list_types.h"
 #include "mt64.h"
+
+// Treats a buffer as an array of a particular list node type, returning a
+// ListNode* to a given index.
+typedef ListNode *ListNodeGetFxn(void *buf, size_t index);
+
+// Randomizes the value a list node of a particular type, given a ListNode*.
+typedef void ListNodeRandomizeFxn(ListNode *node);
+
+// Returns an index-sensitive checksum for a list node of a particular type.
+typedef uint64_t ListNodeChecksumFxn(const ListNode *node, size_t index);
+
+// Returns false if a list node of a particular type violates an internal
+// constraint, given a ListNode*.
+typedef bool ListNodeValidateFxn(const ListNode *node);
+
+// Provides a set of function pointers for working with list nodes of different
+// types in a generic manner.
+typedef struct {
+  ListNodeGetFxn *get;
+  ListNodeRandomizeFxn *randomize;
+  ListNodeCompareFxn *compare;
+  ListNodeChecksumFxn *checksum;
+  ListNodeValidateFxn *validate;
+} ListNodeOps;
+
+// Returns an Int64ListNode at the specified index.
+static ListNode *get_int64_list_node(void *const buf, const size_t index) {
+  return (ListNode *)((Int64ListNode *)buf + index);
+}
+
+// Randomizes an Int64ListNode, given a ListNode* to the node.
+static void randomize_int64_list_node(ListNode *const node) {
+  Int64ListNode *const int64_node = (Int64ListNode *)node;
+  int64_node->value = genrand64_int64();
+}
+
+// Returns an index-sensitive checksum for an Int64ListNode.
+static uint64_t checksum_int64_list_node(
+    const ListNode *const node,
+    const size_t index
+) {
+  return ((uint64_t)((Int64ListNode *)node)->value) * (index + 1);
+}
+
+// Validates an Int64ListNode.
+static bool validate_int64_list_node(const ListNode *const node) {
+  // Int64ListNodes don't have anything to validate.
+  (void)node;
+  return true;
+}
+
+// List node operations for an Int64List.
+static const ListNodeOps list_node_ops_int64 = {
+  .get = get_int64_list_node,
+  .randomize = randomize_int64_list_node,
+  .compare = compare_int64_list_node,
+  .checksum = checksum_int64_list_node,
+  .validate = validate_int64_list_node
+};
 
 // Returns the current time in seconds.
 static double now(void) {
@@ -35,16 +95,17 @@ static void print_csv_header(const char *context) {
 
 // Creates a randomized linked list of int64_t in the designated buffer, with
 // the specified seed.
-static Int64ListNode *generate_int64_list(
-    Int64ListNode *const nbuf, 
+static ListNode *generate_list(
+    const ListNodeOps *const ln_ops,
+    void *const list_buf,
     const size_t elems,
     const uint64_t seed
 ) {
-  static size_t *pbuf = NULL;
-  static size_t pbuf_size = 0;
-  if (elems > pbuf_size) {
-    pbuf = (size_t *)realloc(pbuf, sizeof(size_t) * elems);
-    pbuf_size = elems;
+  static size_t *perm_buf = NULL;
+  static size_t perm_buf_size = 0;
+  if (elems > perm_buf_size) {
+    perm_buf = (size_t *)realloc(perm_buf, sizeof(size_t) * elems);
+    perm_buf_size = elems;
   }
 
   // The constant is intended to "temper" simple seeds like 1, 2, 3.
@@ -52,53 +113,67 @@ static Int64ListNode *generate_int64_list(
 
   // Randomize the values.
   for (size_t i = 0; i < elems; ++i) {
-    nbuf[i].value = genrand64_int64();
+    ln_ops->randomize(ln_ops->get(list_buf, i));
   }
 
   // Prepare to make a random permutation of nodes.
   for (size_t i = 0; i < elems; ++i) {
-    pbuf[i] = i;
+    perm_buf[i] = i;
   }
 
   // Fisher-Yates shuffle the node order.
   for (size_t i = 0; i < elems; ++i) {
     size_t j = i + (elems - i) * genrand64_real2();
-    size_t t = pbuf[i];
-    pbuf[i] = pbuf[j];
-    pbuf[j] = t;
+    size_t t = perm_buf[i];
+    perm_buf[i] = perm_buf[j];
+    perm_buf[j] = t;
   }
 
   // String together the linked list.
-  for (size_t i = 0; i < elems - 1; ++i) {
-    nbuf[pbuf[i]].node.next = &nbuf[pbuf[i+1]].node;
+  ListNode *const first = ln_ops->get(list_buf, perm_buf[0]);
+  ListNode *prev = first;
+  for (size_t i = 1; i < elems; ++i) {
+    ListNode *const curr = ln_ops->get(list_buf, perm_buf[i]);
+    prev->next = curr;
+    prev = curr;
   }
-  nbuf[pbuf[elems-1]].node.next = NULL;
+  prev->next = NULL;
 
-  return &nbuf[pbuf[0]];
+  return first;
 }
 
 // Returns 0 if incorrect; otherwise, returns a checksum of the list contents
 // computed with a simple weighted checksum.
-static uint64_t check_int64_list_correctness(
-    Int64ListNode *const head,
+static uint64_t check_list_correctness(
+    const ListNodeOps *const ln_ops,
+    ListNode *const head,
     const size_t elems
 ) {
+  ListNode *curr = head, *prev = NULL;
   uint64_t csum = 0;
-  Int64ListNode *node = head;
-  int64_t prev_value = node->value;
 
   for (size_t i = 0; i < elems; ++i) {
-    if (!node) {
+    // Fail if we hit end-of-list too soon.
+    if (!curr) {
       return 0;
     }
 
-    if (node->value < prev_value) {
+    // Fail if current node is less than the previous node.
+    if (prev && ln_ops->compare(curr, prev)) {
       return 0;
     }
 
-    csum = (i + 1) * node->value;
-    prev_value = node->value;
-    node = (Int64ListNode *)node->node.next;
+    // Fail if node fails to validate.
+    if (!ln_ops->validate(curr)) {
+      return 0;
+    }
+
+    // Update checksum.
+    csum = ((csum << 1) ^ (csum >> 1)) + ln_ops->checksum(curr, i);
+
+    // Advance down the list.
+    prev = curr;
+    curr = curr->next;
   }
 
   return csum ? csum : 1;
@@ -111,42 +186,53 @@ typedef struct {
 
 // Invokes the sort function under test, returning its total execution time
 // and the checksum associated with its (hopefully) sorted list.
-static TestResult run_int64_list_test(void *const buf, const size_t elems,
-                                      ListSortFxn *const sort, const int seed) {
-  Int64ListNode *in = generate_int64_list((Int64ListNode *)buf, elems, seed);
+static TestResult run_test(
+    ListSortFxn *const sort,
+    const ListNodeOps *const ln_ops,
+    void *const list_buf,
+    const size_t elems,
+    const int seed
+) {
+  ListNode *const in = generate_list(ln_ops, list_buf, elems, seed);
 
   const double t1 = now();
-  ListNode *out = sort((ListNode *)in, compare_int64_list_node);
+  ListNode *const out = sort(in, ln_ops->compare);
   const double t2 = now();
 
   const TestResult test_result = {
       .time = t2 - t1,
-      .csum = check_int64_list_correctness((Int64ListNode *)out, elems)
+      .csum = check_list_correctness(ln_ops, out, elems)
   };
 
   return test_result;
 }
 
-static void run_int64_list_tests(
-    void *const buf, TestResult *const tr, double *const tot_time,
-    const size_t elems, const int seed_lo, const int seed_hi) {
+static void run_tests(
+    TestResult *const tr_buf,
+    double *const time_buf,
+    const ListNodeOps *const ln_ops,
+    void *const list_buf,
+    const size_t elems,
+    const int seed_lo,
+    const int seed_hi
+) {
   printf("%zu", elems); fflush(stdout);
 
   for (size_t i = 0; i < sort_registry.length; ++i) {
-    tot_time[i] = 0.;
+    time_buf[i] = 0.;
   }
 
   for (int seed = seed_lo; seed <= seed_hi; ++seed) {
     for (size_t i = 0; i < sort_registry.length; ++i) {
-      tr[i] = run_int64_list_test(buf, elems,
-                                  sort_registry.entry[i].fxn, seed);
-      tot_time[i] += tr[i].time;
+      tr_buf[i] = run_test(sort_registry.entry[i].fxn,
+                           ln_ops, list_buf, elems, seed);
+      time_buf[i] += tr_buf[i].time;
     }
 
     // Now check that they all return the same checksum.
     bool ok = true;
     for (size_t i = 1; i < sort_registry.length; ++i) {
-      if (tr[0].csum != tr[i].csum) {
+      if (tr_buf[0].csum != tr_buf[i].csum) {
         ok = false;
       }
     }
@@ -154,16 +240,16 @@ static void run_int64_list_tests(
     if (!ok) {
       printf("\nFAIL");
       for (size_t i = 0; i < sort_registry.length; ++i) {
-        printf(",%" PRIX64, tr[i].csum);
+        printf(",%" PRIX64, tr_buf[i].csum);
       }
       putchar('\n');
       exit(1);
     }
   }
 
-  double seed_scale = 1.0 / (seed_hi - seed_lo + 1);
+  const double seed_scale = 1.0 / (seed_hi - seed_lo + 1);
   for (size_t i = 0; i < sort_registry.length; ++i) {
-    printf(",%g", tot_time[i] * seed_scale);
+    printf(",%g", time_buf[i] * seed_scale);
   }
   putchar('\n');
   fflush(stdout);
@@ -175,11 +261,11 @@ static void run_int64_list_tests(
 #define NUM_SEEDS (8)
 
 int main() {
-  void *buf = malloc(MAX_BYTES);
-  TestResult *tr = calloc(sizeof(TestResult), sort_registry.length);
-  double *tot_time = calloc(sizeof(double), sort_registry.length);
+  void *const list_buf = malloc(MAX_BYTES);
+  TestResult *const tr_buf = calloc(sizeof(TestResult), sort_registry.length);
+  double *const time_buf = calloc(sizeof(double), sort_registry.length);
 
-  if (!buf || !tr || !tot_time) {
+  if (!list_buf || !tr_buf || !time_buf) {
     fprintf(stderr, "Memory allocation failed.\n");
     exit(1);
   }
@@ -187,7 +273,7 @@ int main() {
   // Warmup.
   const size_t elems = MAX_BYTES / sizeof(Int64ListNode);
   print_csv_header("Warmup");
-  run_int64_list_tests(buf, tr, tot_time, elems, 0, 0);
+  run_tests(tr_buf, time_buf, &list_node_ops_int64, list_buf, elems, 0, 0);
 
   print_csv_header("Elems");
 
@@ -206,7 +292,8 @@ int main() {
       }
       prev_elems = elems;
 
-      run_int64_list_tests(buf, tr, tot_time, elems, 1, NUM_SEEDS);
+      run_tests(tr_buf, time_buf, &list_node_ops_int64, list_buf, elems, 1,
+                NUM_SEEDS);
     }
   }
   
