@@ -6,6 +6,7 @@
 #define BUI2_MERGE_SORT_H_
 
 #include "list_node.h"
+#include "list_sort.h"
 
 // Implements a merge sort on a singly linked list, using a bottom-up iterative
 // power-of-2 collapsing merge sort, based on a strawman I posted here:

@@ -6,6 +6,7 @@
 #define TDR1_MERGE_SORT_H_
 
 #include "list_node.h"
+#include "list_sort.h"
 
 // Implements a naive top-down recursive merge sort on a linked list.
 // This version does not try to measure the list length up front to take

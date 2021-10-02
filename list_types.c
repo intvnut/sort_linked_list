@@ -5,6 +5,8 @@
 #include <stddef.h>
 
 #include "list_node.h"
+#include "list_sort.h"
+#include "list_types.h"
 
 bool compare_int64_list_node(ListNode *a, ListNode *b) {
   Int64ListNode *aa = (Int64ListNode *)a;
@@ -17,7 +19,7 @@ bool compare_cacheline_list_node(ListNode *a, ListNode *b) {
   CachelineListNode *aa = (CachelineListNode *)a;
   CachelineListNode *bb = (CachelineListNode *)b;
 
-  for (size_t i = 0; i < sizeof(aa->data)/sizeof(aa->data[0]); ++i) {
+  for (size_t i = 0; i < kCachelineListNodeDataLen; ++i) {
     if (aa->data[i] < bb->data[i]) {
       return true;
     }

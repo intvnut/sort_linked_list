@@ -2,6 +2,7 @@
 #define TDI2_MERGE_SORT_H_
 
 #include "list_node.h"
+#include "list_sort.h"
 
 // Implements a top-down iterative list merge sort with O(1) auxillary storage,
 // from Drew Eckhardt's post here:

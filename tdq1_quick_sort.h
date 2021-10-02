@@ -6,6 +6,7 @@
 #define TDQ1_QUICK_SORT_H_
 
 #include "list_node.h"
+#include "list_sort.h"
 
 // Sorts a singly linked list with a naive pivot Quicksort.
 ListNode *tdq1_quick_sort(ListNode *const head, ListNodeCompareFxn *const cmp);

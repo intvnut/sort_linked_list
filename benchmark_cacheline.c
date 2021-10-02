@@ -20,6 +20,8 @@
 #include "bui1_merge_sort.h"
 #include "bui2_merge_sort.h"
 #include "list_node.h"
+#include "list_sort.h"
+#include "list_types.h"
 #include "mt64.h"
 #include "tdi1_merge_sort.h"
 #include "tdi2_merge_sort.h"

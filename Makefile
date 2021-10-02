@@ -6,7 +6,7 @@ CC = gcc-9.2.0
 CFLAGS = -O3 -flto -Wall -W -Wextra -DUSE_MEMALIGN
 LFLAGS = -lrt
 
-COMMON_SRCS += list_node.c
+COMMON_SRCS += list_types.c
 COMMON_SRCS += mt19937-64.c
 COMMON_SRCS += bui1_merge_sort.c
 COMMON_SRCS += bui2_merge_sort.c
@@ -20,6 +20,8 @@ BMK_INT64_SRCS += benchmark_int64.c
 BMK_CACHELINE_SRCS += benchmark_cacheline.c
 
 COMMON_HDRS += list_node.h
+COMMON_HDRS += list_sort.h
+COMMON_HDRS += list_types.h
 COMMON_HDRS += mt64.h
 COMMON_HDRS += bui1_merge_sort.h
 COMMON_HDRS += bui2_merge_sort.h
