@@ -54,11 +54,13 @@ static CachelineListNode *generate_cacheline_list(
 
   // Randomize the values.
   for (size_t i = 0; i < elems; ++i) {
-    // Only randomize the last element, to force the compare function to check the whole array.
-    for (size_t j = 0; j < CACHELINE_LIST_NODE_ARRAY_LEN - 1; ++j) {
+    const int last = kCachelineListNodeDataLen - 1;
+    // Only randomize the last element, to force the compare function to check
+    // the whole array.
+    for (size_t j = 0; j < last; ++j) {
       nbuf[i].data[j] = 0;
     }
-    nbuf[i].data[CACHELINE_LIST_NODE_ARRAY_LEN - 1] = genrand64_int64() % INT32_MAX;
+    nbuf[i].data[last] = genrand64_int64() % INT32_MAX;
   }
 
   // Prepare to make a random permutation of nodes.
@@ -91,21 +93,22 @@ static uint64_t check_cacheline_list_correctness(
 ) {
   uint64_t csum = 0;
   CachelineListNode *node = head;
-  int32_t prev_value = node->data[CACHELINE_LIST_NODE_ARRAY_LEN - 1];
+  const int last = kCachelineListNodeDataLen - 1;
+  int32_t prev_value = node->data[last];
 
   for (size_t i = 0; i < elems; ++i) {
     if (!node) {
       return 0;
     }
 
-    int32_t curr_value = node->data[CACHELINE_LIST_NODE_ARRAY_LEN - 1];
+    int32_t curr_value = node->data[last];
 
     if (curr_value < prev_value) {
       return 0;
     }
 
     // Verify fixed value hasn't changed.
-    for (size_t j = 0; j < CACHELINE_LIST_NODE_ARRAY_LEN - 1; ++j) {
+    for (size_t j = 0; j < last; ++j) {
       if (node->data[j] != 0) {
         return 0;
       }
@@ -126,9 +129,11 @@ typedef struct {
 
 // Invokes the sort function under test, returning its total execution time
 // and the checksum associated with its (hopefully) sorted list.
-static TestResult run_cacheline_list_test(void *const buf, const size_t elems,
-                                          ListSortFxn *const sort, const int seed) {
-  CachelineListNode *in = generate_cacheline_list((CachelineListNode *)buf, elems, seed);
+static TestResult run_cacheline_list_test(
+    void *const buf, const size_t elems, ListSortFxn *const sort,
+    const int seed) {
+  CachelineListNode *in =
+      generate_cacheline_list((CachelineListNode *)buf, elems, seed);
 
   const double t1 = now();
   ListNode *out = sort((ListNode *)in, compare_cacheline_list_node);
@@ -159,19 +164,26 @@ int main() {
            "%zu", elems);
     fflush(stdout);
 
-    const TestResult bui1_tr = run_cacheline_list_test(buf, elems, bui1_merge_sort, 0);
+    const TestResult bui1_tr =
+        run_cacheline_list_test(buf, elems, bui1_merge_sort, 0);
     printf(",%f", bui1_tr.time); fflush(stdout);
-    const TestResult bui2_tr = run_cacheline_list_test(buf, elems, bui2_merge_sort, 0);
+    const TestResult bui2_tr =
+        run_cacheline_list_test(buf, elems, bui2_merge_sort, 0);
     printf(",%f", bui2_tr.time); fflush(stdout);
-    const TestResult tdr1_tr = run_cacheline_list_test(buf, elems, tdr1_merge_sort, 0);
+    const TestResult tdr1_tr =
+        run_cacheline_list_test(buf, elems, tdr1_merge_sort, 0);
     printf(",%f", tdr1_tr.time); fflush(stdout);
-    const TestResult tdr2_tr = run_cacheline_list_test(buf, elems, tdr2_merge_sort, 0);
+    const TestResult tdr2_tr =
+        run_cacheline_list_test(buf, elems, tdr2_merge_sort, 0);
     printf(",%f", tdr2_tr.time); fflush(stdout);
-    const TestResult tdq1_tr = run_cacheline_list_test(buf, elems, tdq1_quick_sort, 0);
+    const TestResult tdq1_tr =
+        run_cacheline_list_test(buf, elems, tdq1_quick_sort, 0);
     printf(",%f", tdq1_tr.time); fflush(stdout);
-    const TestResult tdi1_tr = run_cacheline_list_test(buf, elems, tdi1_merge_sort, 0);
+    const TestResult tdi1_tr =
+        run_cacheline_list_test(buf, elems, tdi1_merge_sort, 0);
     printf(",%f", tdi1_tr.time); fflush(stdout);
-    const TestResult tdi2_tr = run_cacheline_list_test(buf, elems, tdi2_merge_sort, 0);
+    const TestResult tdi2_tr =
+        run_cacheline_list_test(buf, elems, tdi2_merge_sort, 0);
     printf(",%f", tdi2_tr.time); fflush(stdout);
 
     if (bui1_tr.csum != bui2_tr.csum || bui1_tr.csum != tdr1_tr.csum ||

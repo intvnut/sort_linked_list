@@ -119,7 +119,9 @@ entire array, thereby ensuring it's entirely in the cache.
 
 ```
 // Nodes containing 64 bytes worth of data (typical cacheline).
-#define CACHELINE_LIST_NODE_ARRAY_LEN ((64 - sizeof(ListNode)) / sizeof(int32_t))
+enum {
+  kCachelineListNodeArrayLen = ((64 - sizeof(ListNode)) / sizeof(int32_t))
+};
 typedef struct cacheline_list_node {
   ListNode node;
   int32_t data[CACHELINE_LIST_NODE_ARRAY_LEN];
