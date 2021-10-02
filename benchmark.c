@@ -123,12 +123,22 @@ static uint64_t check_list_correctness(
 typedef struct {
   double time;
   uint64_t csum;
-} TestResult;
+} BenchResult;
+
+typedef struct {
+  const ListNodeBenchOps *lnb_ops;
+  void *list_buf;
+  BenchResult *rslt_buf;
+  double *time_buf;
+  int seed_lo, seed_hi;     // Inclusive range.
+  size_t size_lo, size_hi;  // Inclusive range, in bytes.
+} BenchSweepDetails;
+
 
 // Invokes the sort function under test on an already-prepared list, returning
 // its total execution time and the checksum associated with its (hopefully)
 // sorted list.
-static TestResult run_single_benchmark(
+static BenchResult run_single_benchmark(
     ListSortFxn *const sort,
     const ListNodeBenchOps *const lnb_ops,
     void *const list_buf,
@@ -141,7 +151,7 @@ static TestResult run_single_benchmark(
   ListNode *const out = sort(in, lnb_ops->compare);
   const double t2 = now();
 
-  const TestResult test_result = {
+  const BenchResult test_result = {
       .time = t2 - t1,
       .csum = check_list_correctness(lnb_ops, out, elems)
   };
@@ -152,31 +162,30 @@ static TestResult run_single_benchmark(
 // Invokes each of the sort functions in the sort registry with the same size
 // input, iterating over a range of seed values for randomization.
 static void run_benchmark_suite_at_single_size(
-    TestResult *const tr_buf,
-    double *const time_buf,
-    const ListNodeBenchOps *const lnb_ops,
-    void *const list_buf,
-    const size_t elems,
-    const int seed_lo,
-    const int seed_hi
+    const BenchSweepDetails *const sweep,
+    const size_t elems
 ) {
+  double *const time_buf = sweep->time_buf;
+  BenchResult *const rslt_buf = sweep->rslt_buf;
+
   printf("%zu", elems); fflush(stdout);
 
   for (size_t i = 0; i < sort_registry.length; ++i) {
     time_buf[i] = 0.;
   }
 
-  for (int seed = seed_lo; seed <= seed_hi; ++seed) {
+  for (int seed = sweep->seed_lo; seed <= sweep->seed_hi; ++seed) {
     for (size_t i = 0; i < sort_registry.length; ++i) {
-      tr_buf[i] = run_single_benchmark(sort_registry.entry[i].fxn,
-                                       lnb_ops, list_buf, elems, seed);
-      time_buf[i] += tr_buf[i].time;
+      rslt_buf[i] = run_single_benchmark(sort_registry.entry[i].fxn,
+                                         sweep->lnb_ops, sweep->list_buf,
+                                         elems, seed);
+      time_buf[i] += rslt_buf[i].time;
     }
 
     // Now check that they all return the same checksum.
     bool ok = true;
     for (size_t i = 1; i < sort_registry.length; ++i) {
-      if (tr_buf[0].csum != tr_buf[i].csum) {
+      if (rslt_buf[0].csum != rslt_buf[i].csum) {
         ok = false;
       }
     }
@@ -184,14 +193,14 @@ static void run_benchmark_suite_at_single_size(
     if (!ok) {
       printf("\nFAIL");
       for (size_t i = 0; i < sort_registry.length; ++i) {
-        printf(",%" PRIX64, tr_buf[i].csum);
+        printf(",%" PRIX64, rslt_buf[i].csum);
       }
       putchar('\n');
       exit(1);
     }
   }
 
-  const double seed_scale = 1.0 / (seed_hi - seed_lo + 1);
+  const double seed_scale = 1.0 / (sweep->seed_hi - sweep->seed_lo + 1);
   for (size_t i = 0; i < sort_registry.length; ++i) {
     printf(",%g", time_buf[i] * seed_scale);
   }
@@ -202,15 +211,10 @@ static void run_benchmark_suite_at_single_size(
 // Sweeps over a range of input sizes, running the benchmark suite over a
 // range of input sizes.
 static void run_benchmark_suite_size_sweep(
-    TestResult *const tr_buf,
-    double *const time_buf,
-    const ListNodeBenchOps *const lnb_ops,
-    void *const list_buf,
-    const int seed_lo,
-    const int seed_hi,
-    const size_t size_lo,
-    const size_t size_hi
+    const BenchSweepDetails *const sweep
 ) {
+  const size_t elem_size = sweep->lnb_ops->size;
+
   // Step the coarse-grain size by powers of 2.
   for (int pow2 = 4; pow2 < 64; ++pow2) {
     size_t prev_elems = 0;
@@ -218,22 +222,21 @@ static void run_benchmark_suite_size_sweep(
     // At each power-of-2, take 8 fine-grain steps.
     for (int sub_pow2 = 0; sub_pow2 < 8; ++sub_pow2) {
       const size_t bytes = (1ull << pow2) + sub_pow2 * (1ull << (pow2 - 3));
-      const size_t elems = bytes / lnb_ops->size;
+      const size_t elems = bytes / elem_size;
 
       // If the new size repeats an earlier element count, skip it.  Also, skip
       // it if it's below our size range.
-      if (!elems || elems == prev_elems || bytes < size_lo) {
+      if (!elems || elems == prev_elems || bytes < sweep->size_lo) {
         continue;
       }
 
       // Stop when we exceed our maximum size.
-      if (bytes > size_hi) {
+      if (bytes > sweep->size_hi) {
         break;
       }
       prev_elems = elems;
 
-      run_benchmark_suite_at_single_size(tr_buf, time_buf, lnb_ops, list_buf,
-                                         elems, seed_lo, seed_hi);
+      run_benchmark_suite_at_single_size(sweep, elems);
     }
   }
 }
@@ -244,27 +247,37 @@ static void run_benchmark_suite_size_sweep(
 #define NUM_SEEDS (8)
 
 int main() {
-  const ListNodeBenchOps *const lnb_ops = &list_node_bench_ops_int64;
-  void *const list_buf = malloc(MAX_BYTES);
-  TestResult *const tr_buf = calloc(sizeof(TestResult), sort_registry.length);
-  double *const time_buf = calloc(sizeof(double), sort_registry.length);
+  const BenchSweepDetails main_sweep = {
+    .lnb_ops = &list_node_bench_ops_int64,
+    .list_buf = malloc(MAX_BYTES),
+    .rslt_buf = calloc(sizeof(BenchResult), sort_registry.length),
+    .time_buf = calloc(sizeof(double), sort_registry.length),
+    .seed_lo = 1,  .seed_hi = NUM_SEEDS,
+    .size_lo = 16, .size_hi = MAX_BYTES
+  };
 
-  if (!list_buf || !tr_buf || !time_buf) {
+  const BenchSweepDetails warmup_sweep = {
+    .lnb_ops = main_sweep.lnb_ops,
+    .list_buf = main_sweep.list_buf,
+    .rslt_buf = main_sweep.rslt_buf,
+    .time_buf = main_sweep.time_buf,
+    .seed_lo = 0,.seed_hi = 0, .size_lo = MAX_BYTES, .size_hi = MAX_BYTES
+  };
+
+  if (!main_sweep.list_buf || !main_sweep.rslt_buf || !main_sweep.time_buf) {
     fprintf(stderr, "Memory allocation failed.\n");
     exit(1);
   }
 
   // Warmup.  Run the sorts on a max-size buffer with a single seed.
   print_csv_header("Warmup");
-  run_benchmark_suite_size_sweep(tr_buf, time_buf, lnb_ops, list_buf,
-                                 0, 0, MAX_BYTES, MAX_BYTES);
+  run_benchmark_suite_size_sweep(&warmup_sweep);
 
 
   // Main benchmark.  
   // Sweep over a range of memory sizes, and use multiple seeds.
   print_csv_header("Elems");
-  run_benchmark_suite_size_sweep(tr_buf, time_buf, lnb_ops, list_buf,
-                                 1, NUM_SEEDS, 16, MAX_BYTES);
+  run_benchmark_suite_size_sweep(&main_sweep);
   
   printf("PASS\n");
 }
