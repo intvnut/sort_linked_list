@@ -1,5 +1,9 @@
 # Linked List Sort Benchmark
 
+*Note:* I'm currently refactoring the benchmark code so that a single
+benchmark driver can run both benchmarks.  The refactor is incomplete, but well
+on its way.
+
 ## License
 
 Everything in this benchmark authored by me (Joe Zbiciak,
