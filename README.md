@@ -1,8 +1,5 @@
 # Linked List Sort Benchmark
 
-*Note:* I'm currently refactoring the benchmark code so that a single
-benchmark driver can run both benchmarks.  The refactor is incomplete, but well
-on its way.
 
 ## License
 
@@ -175,7 +172,20 @@ this benchmark will give optimistic results as compared to a linked list with a
 similar number of elements allocted with separate calls to the stock `malloc()`
 (C) or `new` (C++).
 
-### Benchmarking Interface
+### Usage
+
+Here's how I run the benchmarks.  I also sometimes use `taskset` to pin the
+benchmark to a single CPU, after setting the CPU's governor to `performance`.
+
+```
+./benchmark int64 | tee int64.csv           # run Int64ListNode test
+./benchmark cacheline | tee cacheline.csv   # run CachelineListNode test
+```
+
+Each benchmark sweep takes hours to run on my machine.  I generally run them
+when I won't be at my computer for awhile (e.g. overnight).
+
+### Benchmark Driver Internal Interface
 
 The benchmark driver `benchmark.c` is implemented in a type-agnostic manner
 that allows it to measure sort performance on arbitrary `ListNode` types.
