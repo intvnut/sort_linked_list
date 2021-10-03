@@ -232,5 +232,5 @@ offer more opportunity for cleverness.
 ---
 
 
-Copyright 2021, Joe Zbiciak <joe.zbiciak@leftturnonly.info>
+Copyright 2021, Joe Zbiciak <joe.zbiciak@leftturnonly.info>  
 `SPDX-License-Identifier:  CC-BY-SA-4.0`
