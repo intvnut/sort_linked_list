@@ -73,6 +73,7 @@ variants of 3 of them.  They are:
 | `bui2_merge_sort` | Bottom-Up MergeSort, version 2. | The same algorithm as `bui1_merge_sort`, but with a minor tweak that puts sorted pairs onto the work stack rather than single nodes. |
 | `tdr1_merge_sort` | Top-Down Recursive MergeSort, version 1. | This is the simplest top-down recursive merge sort.  It does not take advantage of list length information. |
 | `tdr2_merge_sort` | Top-Down Recursive MergeSort, version 2. | Similar to `tdr1_merge_sort`, except that it measures the list length up front, and uses that to optimize finding the midpoint. |
+| `tdr3_merge_sort` | Top-Down Recursive MergeSort, version 3. | Similar to `tdr1_merge_sort`, except that it subdivides lists in an even-odd fashion. |
 | `tdq1_quick_sort` | Top-Down Recursive QuickSort, version 1. | This is the only QuickSort implementation in the mix.  This is a naive QuickSort that just pulls its pivot from the first element.  My benchmark uses randomized data, so this actually is the best case for QuickSort in many ways. |
 | `tdi1_merge_sort` | Top-Down Iterative MergeSort, version 1. | This is Drew Eckhardt's original code, with very minor tweaks to make it work in this framework. |
 | `tdi2_merge_sort` | Top-Down Iterative MergeSort, version 2. | I modified Drew's code to merge the first sub-list with the second sub-list while extracting the second sub-list from the main list.  This provides a nice locality-related boost when the sub-lists are long. |
@@ -174,18 +175,49 @@ this benchmark will give optimistic results as compared to a linked list with a
 similar number of elements allocted with separate calls to the stock `malloc()`
 (C) or `new` (C++).
 
+### Benchmarking Interface
+
+The benchmark driver `benchmark.c` is implemented in a type-agnostic manner
+that allows it to measure sort performance on arbitrary `ListNode` types.
+To benchmark a new type derived from `ListNode`, supply the following functions
+and collect them together in a `ListNodeBenchOps` structure.
+
+From `list_bench.h`:
+
+```
+// Treats a buffer as an array of a particular list node type, returning a
+// ListNode* to a given index.
+typedef ListNode *ListNodeGetFxn(void *buf, size_t index);
+
+// Randomizes the value a list node of a particular type, given a ListNode*.
+typedef void ListNodeRandomizeFxn(ListNode *node);
+
+// Returns an index-sensitive checksum for a list node of a particular type.
+typedef uint64_t ListNodeChecksumFxn(const ListNode *node, size_t index);
+
+// Returns false if a list node of a particular type violates an internal
+// constraint, given a ListNode*.
+typedef bool ListNodeValidateFxn(const ListNode *node);
+
+// Provides a set of function pointers for working with list nodes of different
+// types in a generic manner.
+typedef struct {
+  size_t size;  // Holds the size of one element of this type.
+  ListNodeGetFxn *get;
+  ListNodeRandomizeFxn *randomize;
+  ListNodeCompareFxn *compare;
+  ListNodeChecksumFxn *checksum;
+  ListNodeValidateFxn *validate;
+} ListNodeBenchOps;
+```
+
 ## Caveats
 
 I put this benchmark together in spare time, after work, in the wee hours of
 the night.  I've made a reasonable attempt to format the code nicely and apply
 consistent coding standards throughout.  I've made a reasonable attempt at
-decent code hygiene.
-
-The actual benchmark drivers grew organically.  I should strongly consider
-implementing a "benchmark table" that makes it easy to add new sorting
-benchmarks to the roster, for example.  Originally, this code only measured
-2 or 3 implementations, and then I just kept adding more bit by bit.  A bit of
-refactoring would clean this up nicely.
+decent code hygiene.  I've also refactored and cleaned up the code a bit since
+I first uploaded it.
 
 This is not anywhere close to a definitive set of implementations, or even
 necessarily a particularly clever set of implementations.  I have already
@@ -196,3 +228,9 @@ extend or improve it, and post your own benchmarks.
 
 This code focuses exclusively on singly linked lists.  Doubly-linked lists
 offer more opportunity for cleverness.
+
+---
+
+
+Copyright 2021, Joe Zbiciak <joe.zbiciak@leftturnonly.info>
+`SPDX-License-Identifier:  CC-BY-SA-4.0`
