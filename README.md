@@ -129,7 +129,7 @@ enum {
 };
 typedef struct cacheline_list_node {
   ListNode node;
-  int32_t data[CACHELINE_LIST_NODE_ARRAY_LEN];
+  int32_t data[kCachelineListNodeArrayLen];
 } CachelineListNode;
 ```
 
