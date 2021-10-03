@@ -9,6 +9,7 @@ LFLAGS = -lrt
 COMMON_SRCS += list_sort.c
 COMMON_SRCS += list_types.c
 COMMON_SRCS += mt19937-64.c
+COMMON_SRCS += benchmark.c
 COMMON_SRCS += bui1_merge_sort.c
 COMMON_SRCS += bui2_merge_sort.c
 COMMON_SRCS += tdi1_merge_sort.c
@@ -18,8 +19,6 @@ COMMON_SRCS += tdr2_merge_sort.c
 COMMON_SRCS += tdr3_merge_sort.c
 COMMON_SRCS += tdq1_quick_sort.c
 
-BMK_INT64_SRCS += benchmark.c
-BMK_CACHELINE_SRCS += benchmark_cacheline.c
 
 COMMON_HDRS += list_node.h
 COMMON_HDRS += list_sort.h
@@ -34,13 +33,10 @@ COMMON_HDRS += tdr2_merge_sort.h
 COMMON_HDRS += tdr3_merge_sort.h
 COMMON_HDRS += tdq1_quick_sort.h
 
-all: benchmark_cacheline benchmark_int64
+all: benchmark
 
-benchmark_cacheline: $(COMMON_SRCS) $(COMMON_HDRS) $(BMK_CACHELINE_SRCS)
-	$(CC) -o benchmark_cacheline $(CFLAGS) $(COMMON_SRCS) $(BMK_CACHELINE_SRCS) $(LFLAGS)
-
-benchmark_int64: $(COMMON_SRCS) $(COMMON_HDRS) $(BMK_INT64_SRCS)
-	$(CC) -o benchmark_int64 $(CFLAGS) $(COMMON_SRCS) $(BMK_INT64_SRCS) $(LFLAGS)
+benchmark: $(COMMON_SRCS) $(COMMON_HDRS)
+	$(CC) -o benchmark $(CFLAGS) $(COMMON_SRCS) $(LFLAGS)
 
 clean:
-	rm benchmark_int64 benchmark_cacheline
+	rm benchmark

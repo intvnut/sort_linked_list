@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "list_node.h"
@@ -246,9 +247,35 @@ static void run_benchmark_suite_size_sweep(
 #define MAX_BYTES (1ull << MAX_POW2)
 #define NUM_SEEDS (8)
 
-int main() {
+int main(int argc, char *argv[]) {
+  // For now, very simple argument parsing to select one of two benchmark types.
+  if (argc != 2) {
+    fprintf(stderr, 
+        "Usage:  benchmark <int64|cacheline>\n"
+        "  'int64' runs the benchmark with Int64ListNode\n"
+        "  'cacheline' runs the benchmark with CachelineListNode\n");
+    exit(1);
+  }
+
+  const ListNodeBenchOps *lnb_ops = NULL;
+
+  if (!strcmp(argv[1], "int64")) {
+    lnb_ops = &list_node_bench_ops_int64;
+  }
+
+  if (!strcmp(argv[1], "cacheline")) {
+    lnb_ops = &list_node_bench_ops_cacheline;
+  }
+
+  if (!lnb_ops) {
+    fprintf(stderr, "Unknown benchmark type '%s'\n", argv[1]);
+    exit(1);
+  }
+
+  // Set up the benchmark sweep details.  Eventually, consider adding flags to
+  // modify these details.
   const BenchSweepDetails main_sweep = {
-    .lnb_ops = &list_node_bench_ops_int64,
+    .lnb_ops = lnb_ops,
     .list_buf = malloc(MAX_BYTES),
     .rslt_buf = calloc(sizeof(BenchResult), sort_registry.length),
     .time_buf = calloc(sizeof(double), sort_registry.length),
@@ -256,6 +283,8 @@ int main() {
     .size_lo = 16, .size_hi = MAX_BYTES
   };
 
+  // Set up the warmpup sweep details.  Eventually, consider adding flags to
+  // modify these details.
   const BenchSweepDetails warmup_sweep = {
     .lnb_ops = main_sweep.lnb_ops,
     .list_buf = main_sweep.list_buf,
@@ -272,7 +301,6 @@ int main() {
   // Warmup.  Run the sorts on a max-size buffer with a single seed.
   print_csv_header("Warmup");
   run_benchmark_suite_size_sweep(&warmup_sweep);
-
 
   // Main benchmark.  
   // Sweep over a range of memory sizes, and use multiple seeds.
