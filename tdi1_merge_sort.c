@@ -1,3 +1,7 @@
+// Top-down Iterative Merge Sort with O(1) auxillary storage.
+//
+// Author:  Drew Eckhardt
+// SPDX-License-Identifier:  CC-BY-SA-4.0
 #include "tdi1_merge_sort.h"
 
 #include <stddef.h>

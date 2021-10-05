@@ -1,3 +1,10 @@
+// Top-down Iterative Merge Sort with O(1) auxillary storage.  Modified to
+// measure list length up front and merge the second sublist during extraction
+// from the main list.
+//
+// Primary author:  Drew Eckhardt
+// Secondary author:  Joe Zbiciak
+// SPDX-License-Identifier:  CC-BY-SA-4.0
 #ifndef TDI2_MERGE_SORT_H_
 #define TDI2_MERGE_SORT_H_
 

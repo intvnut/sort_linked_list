@@ -3,15 +3,17 @@
 
 ## License
 
-Everything in this benchmark authored by me (Joe Zbiciak,
+Everything in this benchmark suite authored by me (Joe Zbiciak,
 joe.zbiciak@leftturnonly.info) is licensed under the Creative Commons
 Attribution-ShareAlike 4.0 International license, aka.
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
-Drew Eckhardt's top-down iterative implementation is owned by him.  I place no
-intellectual property claim of my own to any modifications I made to his code.
-I will update this section if/when Drew provides guidance on a preferred
-license.
+Drew Eckhardt owns the copyright to his top-down iterative implementation.
+As per
+[his comment](https://www.quora.com/Which-is-the-best-the-most-efficient-sorting-algorithm-implemented-by-linked-list-Merge-sort-Insertion-sort-heap-sort-or-Quick-sort/answer/Joe-Zbiciak?comment_id=224717191&comment_type=2),
+he has licensed his source under Creative Commons Attribution-ShareAlike 4.0
+International, aka.
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
 The Mersenne Twister 64-bit implementation carries its own license, which I
 _believe_ is derived from the BSD 3-Clause license.  But, I am not a lawyer, so
@@ -242,5 +244,5 @@ offer more opportunity for cleverness.
 ---
 
 
-Copyright 2021, Joe Zbiciak <joe.zbiciak@leftturnonly.info>  
+Copyright 2021, Joe Zbiciak <joe.zbiciak@leftturnonly.info>
 `SPDX-License-Identifier:  CC-BY-SA-4.0`

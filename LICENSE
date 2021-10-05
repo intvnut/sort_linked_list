@@ -15,6 +15,10 @@ Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0):
   list_sort.h
   list_types.c
   list_types.h
+  tdi1_merge_sort.c
+  tdi1_merge_sort.h
+  tdi2_merge_sort.c
+  tdi2_merge_sort.h
   tdq1_quick_sort.c
   tdq1_quick_sort.h
   tdr1_merge_sort.c
@@ -27,12 +31,6 @@ Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0):
 Mersenne Twister license (see mt64.h, mt19937-64.c):
   mt19937-64.c
   mt64.h
-
-File copyright Drew Eckhardt (further license details unknown):
-  tdi1_merge_sort.c
-  tdi1_merge_sort.h
-  tdi2_merge_sort.c
-  tdi2_merge_sort.h
 
 ____
 Copyright 2021, Joe Zbiciak <joe.zbiciak@leftturnonly.info>
